@@ -2,6 +2,7 @@
     "name": "tschope/passport-tracking-client",
     "description": "A package for tracking Irish passport applications.",
     "license": "MIT",
+    "version": "1.0.1",
     "autoload": {
         "psr-4": {
             "Tschope\\PassportTrackingClient\\": "src/"
@@ -13,7 +14,7 @@
             "email": "tschope@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "php": "^8.2",
         "symfony/dom-crawler": "^7.2",

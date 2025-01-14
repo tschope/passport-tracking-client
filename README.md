@@ -35,8 +35,8 @@ Example output:
 ```
 Array
 (
-    ["Application Id"] => "08/01/2025"
-    ["Application Received"] => "08/01/2025
+    ["Application Id"] => "40066000000"
+    ["Application Received"] => "08/01/2025"
     ["Progress"] => "3.24%"
     ["Estimated Issue Date"] => "11/02/2025"
     ["Alert Date"] => "14/01/2025"
