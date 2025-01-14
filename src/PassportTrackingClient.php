@@ -93,7 +93,6 @@ class PassportTrackingClient
         }
 
         return [
-            // 'Application Id' => trim($idContainer->text(null)),
             'Application Id' => trim(str_replace('Passport Application ID:', '', $idContainer->text(null))),
         ];
     }
