@@ -74,8 +74,16 @@ class PassportTrackingClient
                 $lastUpdated = $this->getLastUpdated($crawler);
                 $progressDetails = $this->getProgressDetails($crawler);
                 $alertDetails = $this->getAlertDetails($crawler);
+                $statusHistory = $this->getStatusHistory($crawler);
 
-                return array_merge($applicationId, $issueDate, $lastUpdated, $progressDetails, $alertDetails);
+                return array_merge(
+                    $applicationId,
+                    $issueDate,
+                    $lastUpdated,
+                    $progressDetails,
+                    $alertDetails,
+                    ['status_history' => $statusHistory]
+                );
             }
 
             return [
@@ -96,12 +104,12 @@ class PassportTrackingClient
         $idContainer = $crawler->filter('div.jumbotron h2');
         if ($idContainer->count() === 0) {
             return [
-                'Application Id' => null,
+                'application_id' => null,
             ];
         }
 
         return [
-            'Application Id' => trim(str_replace('Passport Application ID:', '', $idContainer->text(null))),
+            'application_id' => trim(str_replace('Passport Application ID:', '', $idContainer->text(null))),
         ];
     }
 
@@ -110,12 +118,12 @@ class PassportTrackingClient
         $issueDateContainer = $crawler->filter('div.jumbotron div.status-date');
         if ($issueDateContainer->count() === 0) {
             return [
-                'Estimated Issue Date' => null,
+                'estimated_issue_date' => null,
             ];
         }
 
         return [
-            'Estimated Issue Date' => trim($issueDateContainer->text(null)),
+            'estimated_issue_date' => trim($issueDateContainer->text(null)),
         ];
     }
 
@@ -124,12 +132,12 @@ class PassportTrackingClient
         $lastUpdatedContainer = $crawler->filter('div.jumbotron div.lastUpdated');
         if ($lastUpdatedContainer->count() === 0) {
             return [
-                'Last Updated' => null,
+                'last_update' => null,
             ];
         }
 
         return [
-            'Last Updated' => trim(str_replace('Last Updated:', '', $lastUpdatedContainer->text(null))),
+            'last_update' => trim(str_replace('Last Updated:', '', $lastUpdatedContainer->text(null))),
         ];
     }
 
@@ -142,8 +150,8 @@ class PassportTrackingClient
         $applicationReceived = $crawler->filter('div.progress-tracking-left div.status-date')->text(null);
 
         return [
-            'Progress' => ($matches[1] ?? '0') . '%',
-            'Application Received' => trim($applicationReceived),
+            'progress' => ($matches[1] ?? '0'),
+            'application_received' => trim($applicationReceived),
         ];
     }
 
@@ -152,9 +160,9 @@ class PassportTrackingClient
         $alertRow = $crawler->filter('table.table tr')->first();
         if ($alertRow->count() === 0) {
             return [
-                'Alert Date' => null,
-                'Alert Title' => null,
-                'Alert Message' => null,
+                'alert_date' => null,
+                'alert_title' => null,
+                'alert_message' => null,
             ];
         }
 
@@ -163,9 +171,66 @@ class PassportTrackingClient
         $alertMessage = $alertRow->filter('p')->text(null);
 
         return [
-            'Alert Date' => trim($alertDate),
-            'Alert Title' => trim($alertTitle),
-            'Alert Message' => trim($alertMessage),
+            'alert_date' => trim($alertDate),
+            'alert_title' => trim($alertTitle),
+            'alert_message' => trim($alertMessage),
         ];
+    }
+
+    private function getStatusHistory(Crawler $crawler): array
+    {
+        $statusHistory = [];
+
+        // Localizar as linhas do histórico de status
+        $crawler->filter('div.status-history table.table tbody tr')->each(function (Crawler $row) use (&$statusHistory) {
+            $dateText = $row->filter('td span.vertical-date small')->text('');
+            $status = $row->filter('td h2')->text('');
+            $message = $row->filter('td p')->text('');
+
+            // Ajustar links de rastreamento no texto de descrição
+            $message = preg_replace_callback(
+                "/href='https:\/\/track\.anpost\.ie\/'>([\w\d]+)<\/a>/",
+                function ($matches) {
+                    $trackingCode = $matches[1];
+                    $newHref = "https://www.anpost.com/Post-Parcels/Track/History?item={$trackingCode}";
+                    return "href='{$newHref}'>{$trackingCode}</a>";
+                },
+                $message
+            );
+
+            $statusHistory[] = [
+                'date' => $dateText,
+                'status' => $status,
+                'message' => $message,
+            ];
+        });
+
+        return $statusHistory;
+    }
+
+    private function adjustTrackingUrls(Crawler $crawler): array
+    {
+        $updatedLinks = [];
+
+        // Localizar todas as tags <a> com o link de rastreamento
+        $crawler->filter('a')->each(function (Crawler $link) use (&$updatedLinks) {
+            $href = $link->attr('href');
+            $trackingCode = $link->text(null);
+
+            // Verificar se é o link da An Post e possui um código de rastreamento
+            if (strpos($href, 'track.anpost.ie') !== false && !empty($trackingCode)) {
+                // Construir a nova URL
+                $newHref = "https://www.anpost.com/Post-Parcels/Track/History?item={$trackingCode}";
+
+                // Atualizar o array com as URLs modificadas
+                $updatedLinks[] = [
+                    'original_href' => $href,
+                    'new_href' => $newHref,
+                    'tracking_code' => $trackingCode,
+                ];
+            }
+        });
+
+        return $updatedLinks;
     }
 }

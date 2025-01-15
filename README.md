@@ -35,22 +35,26 @@ Example output:
 ```
 Array
 (
-    ["Application Id"] => "40066000000"
-    ["Application Received"] => "08/01/2025"
-    ["Progress"] => "3.24%"
-    ["Estimated Issue Date"] => "11/02/2025"
-    ["Alert Date"] => "14/01/2025"
-    ["Alert Title"] => "Processing application"
-    ["Alert Message"] => "We have received your supporting documents. We are now verifying these documents."
+    'application_id' => '40066000000',
+	'estimated_issue_date' => '11/02/2025',
+	'last_update' => '14/01/2025',
+	'progress' => 3.24, // percentage
+	'application_received' => '08/01/2025',
+	'alert_date' => '14/01/2025',
+	'alert_title' => 'Processing application',
+	'alert_message' => "We have received your supporting documents. We are now verifying these documents.",
+	'status_history' => 
+	[
+        'date' => '15/11/2024',
+        'status' => 'Dispatched',
+        'message' => 'Your Passport Book was posted on 15/11/2024',
+    ],
+    [
+        'date' => '15/11/2024',
+        'status' => 'Printing',
+        'message' => 'Your Passport Card is being printed',
+    ],
 )
-```
-
-## Testing
-
-Run tests using PHPUnit:
-
-```bash
-composer test
 ```
 
 ## Contributing
