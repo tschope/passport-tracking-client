@@ -2,7 +2,7 @@
     "name": "tschope/passport-tracking-client",
     "description": "A package for tracking Irish passport applications.",
     "license": "MIT",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "autoload": {
         "psr-4": {
             "Tschope\\PassportTrackingClient\\": "src/"

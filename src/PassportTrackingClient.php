@@ -60,8 +60,8 @@ class PassportTrackingClient
                 $body = (string) $response->getBody();
                 $crawler = new Crawler($body);
 
-                $errorMessage = $crawler->filter('div.alert.alert-danger')->text(null);
-                if (!empty($errorMessage)) {
+                if ($crawler->filter('div.alert.alert-danger')->count() > 0) {
+                    $errorMessage = $crawler->filter('div.alert.alert-danger')->text(null);
                     return [
                         'error' => true,
                         'message' => trim($errorMessage),
@@ -150,7 +150,7 @@ class PassportTrackingClient
         $applicationReceived = $crawler->filter('div.progress-tracking-left div.status-date')->text(null);
 
         return [
-            'progress' => ($matches[1] ?? '0'),
+            'progress' => floatval(($matches[1] ?? '0')),
             'application_received' => trim($applicationReceived),
         ];
     }
@@ -168,7 +168,18 @@ class PassportTrackingClient
 
         $alertDate = $alertRow->filter('span.vertical-date small')->text(null);
         $alertTitle = $alertRow->filter('h2')->text(null);
-        $alertMessage = $alertRow->filter('p')->text(null);
+        $alertMessage = $alertRow->text(null);
+
+        // Ajustar links de rastreamento no texto de descrição
+        $alertMessage = preg_replace_callback(
+            '/\b(LG\d{9}IE)\b/',
+            function ($matches) {
+                $trackingCode = $matches[1];
+                $link = "https://www.anpost.com/Post-Parcels/Track/History?item={$trackingCode}";
+                return "<a href='{$link}' target='_blank'>{$trackingCode}</a>";
+            },
+            $alertMessage
+        );
 
         return [
             'alert_date' => trim($alertDate),
@@ -186,17 +197,6 @@ class PassportTrackingClient
             $dateText = $row->filter('td span.vertical-date small')->text('');
             $status = $row->filter('td h2')->text('');
             $message = $row->filter('td p')->text('');
-
-            // Ajustar links de rastreamento no texto de descrição
-            $message = preg_replace_callback(
-                "/href='https:\/\/track\.anpost\.ie\/'>([\w\d]+)<\/a>/",
-                function ($matches) {
-                    $trackingCode = $matches[1];
-                    $newHref = "https://www.anpost.com/Post-Parcels/Track/History?item={$trackingCode}";
-                    return "href='{$newHref}'>{$trackingCode}</a>";
-                },
-                $message
-            );
 
             $statusHistory[] = [
                 'date' => $dateText,
