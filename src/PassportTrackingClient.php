@@ -60,6 +60,14 @@ class PassportTrackingClient
                 $body = (string) $response->getBody();
                 $crawler = new Crawler($body);
 
+                $errorMessage = $crawler->filter('div.alert.alert-danger')->text(null);
+                if (!empty($errorMessage)) {
+                    return [
+                        'error' => true,
+                        'message' => trim($errorMessage),
+                    ];
+                }
+
                 // Extrair detalhes
                 $applicationId = $this->getApplicationId($crawler);
                 $issueDate = $this->getEstimatedIssueDate($crawler);
