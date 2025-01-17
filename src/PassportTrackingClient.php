@@ -56,6 +56,11 @@ class PassportTrackingClient
                 ]
             ]);
 
+            $defaultResponse = [
+                'error' => false,
+                'message' => null,
+            ];
+
             if ($response->getStatusCode() === 200) {
                 $body = (string) $response->getBody();
                 $crawler = new Crawler($body);
@@ -77,12 +82,13 @@ class PassportTrackingClient
                 $statusHistory = $this->getStatusHistory($crawler);
 
                 return array_merge(
+                    $defaultResponse,
                     $applicationId,
                     $issueDate,
                     $lastUpdated,
                     $progressDetails,
                     $alertDetails,
-                    ['status_history' => $statusHistory]
+                    ['status_history' => $statusHistory],
                 );
             }
 
